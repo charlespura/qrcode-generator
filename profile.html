@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Profiles</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-6">
+  <div class="bg-white p-6 rounded shadow-md w-full max-w-md space-y-6 text-center">
+    <h1 class="text-2xl font-bold mb-4">My Profiles</h1>
+    <div id="profiles" class="space-y-4">
+      <!-- Profile links will appear here -->
+    </div>
+  </div>
+
+<script>
+  function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+  }
+
+  const data = JSON.parse(decodeURIComponent(getQueryParam('data')) || '[]');
+
+  const icons = {
+    facebook: 'icons/facebook.svg',
+    youtube: 'icons/youtube.svg',
+    instagram: 'icons/instagram.svg',
+    github: 'icons/github.svg',
+    twitter: 'icons/twitter.svg'
+  };
+
+  const container = document.getElementById('profiles');
+
+  data.forEach(({ platform, link }) => {
+    const div = document.createElement('div');
+    div.className = "flex items-center space-x-4";
+
+    const img = document.createElement('img');
+    img.src = icons[platform] || 'icons/default.svg'; // fallback icon
+    img.className = "w-10 h-10";
+
+    const a = document.createElement('a');
+    a.href = link;
+    a.textContent = platform.charAt(0).toUpperCase() + platform.slice(1);
+    a.target = "_blank";
+    a.className = "text-blue-600 underline";
+
+    div.appendChild(img);
+    div.appendChild(a);
+    container.appendChild(div);
+  });
+</script>
+<script>
+    window.onload = function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const data = urlParams.get('data'); // Get the 'data' parameter
+  
+      if (data) {
+        const profiles = JSON.parse(decodeURIComponent(data)); // Decode and parse the JSON data
+        const profileContainer = document.getElementById('profileContainer');
+        
+        profiles.forEach(profile => {
+          const profileDiv = document.createElement('div');
+          profileDiv.className = "profile";
+          profileDiv.innerHTML = `
+            <h3>${profile.platform}</h3>
+            <p><a href="${profile.link}" target="_blank">${profile.link}</a></p>
+          `;
+          profileContainer.appendChild(profileDiv);
+        });
+      } else {
+        alert("No profile data found!");
+      }
+    };
+  </script>
+  
+  <div id="profileContainer" class="mt-6"></div>
+  
+</body>
+</html>
