@@ -5,51 +5,80 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My Profiles</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
 </head>
 <body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col items-center p-6">
 
-  <h1 class="text-3xl font-bold mb-6">My Profiles</h1>
+  <!-- Header -->
+  <header class="text-center mb-6">
+    <h1 id="profileTitle" class="text-3xl font-bold text-blue-700">My Profiles</h1>
+    <p class="text-gray-600 mt-2">Tap to open links</p>
+  </header>
 
-  <div id="profileContainer" class="w-full max-w-md space-y-4"></div>
+  <!-- Profiles container -->
+  <main id="profileContainer" class="w-full max-w-lg space-y-4"></main>
 
+  <!-- Error or no data message -->
+  <div id="errorMessage" class="text-red-600 font-medium mt-4 hidden"></div>
+
+  <!-- Script -->
   <script>
-    // Social media icons
     const icons = {
       facebook: "fab fa-facebook-f",
       youtube: "fab fa-youtube",
       instagram: "fab fa-instagram",
       github: "fab fa-github",
-      twitter: "fab fa-twitter"
+      twitter: "fab fa-twitter",
+      linkedin: "fab fa-linkedin",
+      custom: "fas fa-link"
     };
 
-    // Parse ?data=... from URL
     const params = new URLSearchParams(window.location.search);
     const data = params.get("data");
     const container = document.getElementById("profileContainer");
+    const title = document.getElementById("profileTitle");
+    const error = document.getElementById("errorMessage");
 
     if (data) {
       try {
-        const links = JSON.parse(data);
+        const parsed = JSON.parse(decodeURIComponent(data));
+        const fullName = parsed.name || "My";
+        const links = parsed.links || [];
+
+        title.textContent = `${fullName}'s Links`;
+
+        if (links.length === 0) {
+          error.textContent = "No links found.";
+          error.classList.remove("hidden");
+        }
+
         links.forEach(({ platform, link }) => {
           const icon = icons[platform.toLowerCase()] || "fas fa-link";
+          const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
+
           const item = document.createElement("a");
           item.href = link;
           item.target = "_blank";
-          item.className = "flex items-center gap-3 bg-white shadow p-4 rounded hover:bg-gray-50 transition";
+          item.rel = "noopener noreferrer";
+          item.className = "flex items-center gap-4 bg-white shadow hover:shadow-md transition p-4 rounded-lg border hover:border-blue-500";
 
           item.innerHTML = `
-            <i class="${icon} text-xl w-6 text-blue-500"></i>
-            <span class="break-all">${link}</span>
+            <i class="${icon} text-2xl text-blue-600 w-8 text-center"></i>
+            <div>
+              <p class="text-sm font-semibold text-gray-700">${platformName}</p>
+              <p class="text-xs text-gray-500 break-all">${link}</p>
+            </div>
           `;
 
           container.appendChild(item);
         });
       } catch (err) {
-        container.innerHTML = "<p class='text-red-500'>Error loading profile links.</p>";
+        error.textContent = "Error parsing profile data.";
+        error.classList.remove("hidden");
       }
     } else {
-      container.innerHTML = "<p class='text-gray-500'>No data found in the QR code.</p>";
+      error.textContent = "No profile data found in URL.";
+      error.classList.remove("hidden");
     }
   </script>
 

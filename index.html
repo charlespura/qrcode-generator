@@ -6,68 +6,177 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-6">
-  <div class="bg-white p-6 rounded shadow-md w-full max-w-md">
-    <h1 class="text-2xl font-bold mb-4">Add Your Profiles</h1>
-
-    <div id="linkList" class="space-y-4 mb-4">
-      <!-- Links will be added here -->
-    </div>
-
-    <button onclick="addLink()" class="bg-green-500 text-white px-4 py-2 rounded mb-4 w-full">Add Another Link</button>
-    <button onclick="generateQR()" class="bg-blue-500 text-white px-4 py-2 rounded w-full">Generate QR</button>
-
-    <div id="qrcode" class="mt-6 flex justify-center"></div>
-  </div>
-
-  <script>
-    const platforms = ["Facebook", "YouTube", "Instagram", "GitHub", "Twitter"];
-  
-    function addLink() {
-      const container = document.getElementById('linkList');
-      const div = document.createElement('div');
-      div.className = "flex space-x-2";
-      div.innerHTML = `
-        <select class="platform border p-2 w-1/3">
-          ${platforms.map(p => `<option value="${p.toLowerCase()}">${p}</option>`).join('')}
-        </select>
-        <input type="text" class="profileLink border p-2 w-2/3" placeholder="Paste link here">
-      `;
-      container.appendChild(div);
+<body class="bg-gray-100">
+  <style>
+    canvas {
+      image-rendering: pixelated;
     }
+  </style>
   
-    function generateQR() {
-      const allLinks = [];
-      document.querySelectorAll('#linkList > div').forEach(div => {
-        const platform = div.querySelector('.platform').value;
-        const link = div.querySelector('.profileLink').value;
-        if (link.trim() !== "") {
-          allLinks.push({ platform, link });
-        }
-      });
+  <!-- Navbar -->
+  <nav class="bg-blue-600 text-white p-4 shadow-md">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+      <h1 class="text-xl font-bold">Online QR Generator</h1>
+      <a href="#generator" class="hover:underline">Create QR</a>
+    </div>
+  </nav>
+
+  <!-- Tutorial Section -->
+  <section class="bg-white py-10 px-6 text-center">
+    <h2 class="text-3xl font-bold mb-6">Create your QR code in three simple steps</h2>
+    <div class="grid md:grid-cols-3 gap-6 text-left max-w-6xl mx-auto">
+      <div class="p-6 bg-gray-50 rounded shadow">
+        <h3 class="text-xl font-semibold mb-2">1. Choose your QR code content</h3>
+        <p>Decide what you want to share. You can use URLs, videos, apps, and more!</p>
+      </div>
+      <div class="p-6 bg-gray-50 rounded shadow">
+        <h3 class="text-xl font-semibold mb-2">2. Customize your design</h3>
+        <p>Personalize your QR code's color, shape, and style to match your brand!</p>
+      </div>
+      <div class="p-6 bg-gray-50 rounded shadow">
+        <h3 class="text-xl font-semibold mb-2">3. Download your QR code</h3>
+        <p>Save your QR code as a PNG or SVG. Print or share it digitally!</p>
+      </div>
+    </div>
+  </section>
   
-      if (allLinks.length === 0) {
-        alert("Please add at least one profile link!");
-        return;
+
+    <!-- QR Code Generator -->
+    <section id="generator" class="py-10 px-4 flex flex-col items-center w-full">
+      <div class="bg-white p-6 rounded shadow-md w-full max-w-md">
+        <h2 class="text-2xl font-bold mb-4">Add Your Profiles</h2>
+        <input type="text" id="fullName" placeholder="Enter your name" class="border p-2 w-full mb-4 rounded" />
+  
+        <div id="linkList" class="space-y-4 mb-4"></div>
+  
+        <button onclick="addLink()" class="bg-green-500 text-white px-4 py-2 rounded mb-4 w-full">Add Another Link</button>
+        <button onclick="generateQR()" class="bg-blue-500 text-white px-4 py-2 rounded w-full">Generate QR</button>
+        <label class="block mb-2 text-sm font-medium text-gray-700">Choose QR Color:</label>
+        <input type="color" id="qrColor" value="#000000" class="w-full mb-4 h-10 rounded">
+        
+        <button onclick="downloadQR()" class="bg-purple-600 text-white px-4 py-2 rounded w-full">Download QR as PNG</button>
+        
+        <div id="qrcode" class="mt-6 flex justify-center"></div>
+      </div>
+    </section>
+  
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white text-center py-4">
+      &copy; 2025 | QR Generator Project
+    </footer>
+  
+    <script>
+      const platforms = ["Facebook", "YouTube", "Instagram", "GitHub", "Twitter", "LinkedIn", "Custom"];
+      let qrCodeInstance = null;
+      let lastQRUrl = "";
+  
+      function addLink() {
+        const container = document.getElementById('linkList');
+        const div = document.createElement('div');
+        div.className = "flex flex-col space-y-2";
+  
+        div.innerHTML = `
+          <div class="flex space-x-2">
+            <select class="platform border p-2 w-1/3" onchange="handlePlatformChange(this)">
+              ${platforms.map(p => `<option value="${p.toLowerCase()}">${p}</option>`).join('')}
+            </select>
+            <input type="text" class="profileLink border p-2 w-2/3" placeholder="Paste link here">
+          </div>
+          <input type="text" class="customName border p-2 w-full hidden" placeholder="Enter custom name">
+        `;
+  
+        container.appendChild(div);
       }
   
-      // ✅ Correct URL - no space error
-      const fullUrl = `https://charlespura.github.io/qrcode-generator/profile.html?data=${encodeURIComponent(JSON.stringify(allLinks))}`;
-  
-      const qrContainer = document.getElementById('qrcode');
-      qrContainer.innerHTML = ""; // Clear old QR
-  
-      new QRCode(qrContainer, {
-        text: fullUrl,
-        width: 200,
-        height: 200
-      });
-    }
-  
-    // ✅ Optional: Add one link field on page load automatically
-    window.onload = addLink;
-  </script>
-  
+      function handlePlatformChange(selectElement) {
+        const customNameInput = selectElement.closest('div').nextElementSibling;
+        if (selectElement.value === "custom") {
+          customNameInput.classList.remove('hidden');
+        } else {
+          customNameInput.classList.add('hidden');
+          customNameInput.value = "";
+        }
+      }
+      function generateQR() {
+  const allLinks = [];
+  const fullName = document.getElementById("fullName").value.trim();
+  if (fullName === "") {
+    alert("Please enter your name.");
+    return;
+  }
 
-</body>
-</html>
+  document.querySelectorAll('#linkList > div').forEach(div => {
+    const platform = div.querySelector('.platform').value;
+    const link = div.querySelector('.profileLink').value;
+    if (link.trim() !== "") {
+      allLinks.push({ platform, link });
+    }
+  });
+
+  if (allLinks.length === 0) {
+    alert("Please add at least one profile link!");
+    return;
+  }
+
+  const qrColor = document.getElementById('qrColor').value;
+  const qrContainer = document.getElementById('qrcode');
+  qrContainer.innerHTML = "";
+
+  const fullUrl = `https://charlespura.github.io/qrcode-generator/profile.html?data=${encodeURIComponent(JSON.stringify({ name: fullName, links: allLinks }))}`;
+  lastQRUrl = fullUrl;
+
+  // Temporary div for generating the QR code
+  const tempDiv = document.createElement("div");
+  qrContainer.appendChild(tempDiv);
+
+  new QRCode(tempDiv, {
+    text: fullUrl,
+    width: 200,
+    height: 200,
+    colorDark: qrColor,
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
+  });
+
+  setTimeout(() => {
+    const qrCanvas = tempDiv.querySelector('canvas');
+    if (!qrCanvas) return;
+
+    // Create new canvas with padding
+    const padding = 20;
+    const paddedCanvas = document.createElement('canvas');
+    paddedCanvas.width = qrCanvas.width + padding * 2;
+    paddedCanvas.height = qrCanvas.height + padding * 2;
+    const ctx = paddedCanvas.getContext('2d');
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, paddedCanvas.width, paddedCanvas.height);
+    ctx.drawImage(qrCanvas, padding, padding);
+
+    const img = document.createElement("img");
+    img.src = paddedCanvas.toDataURL("image/png");
+    img.alt = "QR Code";
+    qrContainer.innerHTML = "";
+    qrContainer.appendChild(img);
+  }, 200);
+}
+
+function downloadQR() {
+  const img = document.querySelector('#qrcode img');
+  if (!img) {
+    alert("Please generate a QR code first.");
+    return;
+  }
+  const link = document.createElement('a');
+  link.href = img.src;
+  link.download = "qr-code.png";
+  link.click();
+}
+
+
+      window.onload = addLink;
+    </script>
+  
+  </body>
+  </html>
+  
