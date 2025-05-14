@@ -25,107 +25,104 @@
   <div id="toastNotification" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transition-opacity duration-500 pointer-events-none z-50">
     Welcome!
   </div>
+<!-- Script -->
+<script>
+  const icons = {
+    facebook: "fab fa-facebook-f",
+    youtube: "fab fa-youtube",
+    instagram: "fab fa-instagram",
+    github: "fab fa-github",
+    twitter: "fab fa-twitter",
+    linkedin: "fab fa-linkedin",
+    custom: "fas fa-link"
+  };
 
-  <!-- Script -->
-  <script>
-    const icons = {
-      facebook: "fab fa-facebook-f",
-      youtube: "fab fa-youtube",
-      instagram: "fab fa-instagram",
-      github: "fab fa-github",
-      twitter: "fab fa-twitter",
-      linkedin: "fab fa-linkedin",
-      custom: "fas fa-link"
-    };
+  function showToast(message) {
+    const toast = document.getElementById("toastNotification");
+    toast.textContent = message;
+    toast.classList.remove("opacity-0");
+    toast.classList.add("opacity-100");
 
-    function showToast(message) {
-      const toast = document.getElementById("toastNotification");
-      toast.textContent = message;
-      toast.classList.remove("opacity-0");
-      toast.classList.add("opacity-100");
+    setTimeout(() => {
+      toast.classList.remove("opacity-100");
+      toast.classList.add("opacity-0");
+    }, 3000);
+  }
 
-      setTimeout(() => {
-        toast.classList.remove("opacity-100");
-        toast.classList.add("opacity-0");
-      }, 3000); // Disappear after 3 seconds
-    }
+  const params = new URLSearchParams(window.location.search);
+  const data = params.get("data");
+  const container = document.getElementById("profileContainer");
+  const title = document.getElementById("profileTitle");
+  const error = document.getElementById("errorMessage");
 
-    const params = new URLSearchParams(window.location.search);
-    const data = params.get("data");
-    const container = document.getElementById("profileContainer");
-    const title = document.getElementById("profileTitle");
-    const error = document.getElementById("errorMessage");
+  if (data) {
+    try {
+      const parsed = JSON.parse(decodeURIComponent(data));
+      const fullName = parsed.name || "My";
+      const email = parsed.email || "";
+      const links = parsed.links || [];
 
-    if (data) {
-      try {
-        const parsed = JSON.parse(decodeURIComponent(data));
-        const fullName = parsed.name || "My";
-        const email = parsed.email || ""; // Added email
-        const links = parsed.links || [];
+      title.textContent = `${fullName}'s Links`;
+      showToast(`Welcome, ${fullName}!`);
 
-        title.textContent = `${fullName}'s Links`;
-        showToast(`Welcome, ${fullName}!`);
-
-        if (links.length === 0) {
-          error.textContent = "No links found.";
-          error.classList.remove("hidden");
-        }
-
-        links.forEach(({ platform, link }) => {
-          const icon = icons[platform.toLowerCase()] || "fas fa-link";
-          const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
-
-          const item = document.createElement("a");
-          item.href = link;
-          item.target = "_blank";
-          item.rel = "noopener noreferrer";
-          item.className = "flex items-center gap-4 bg-white shadow hover:shadow-md transition p-4 rounded-lg border hover:border-blue-500";
-
-          item.innerHTML = `
-            <i class="${icon} text-2xl text-blue-600 w-8 text-center"></i>
-            <div>
-              <p class="text-sm font-semibold text-gray-700">${platformName}</p>
-              <p class="text-xs text-gray-500 break-all">${link}</p>
-            </div>
-          `;
-
-          container.appendChild(item);
-        });
-
-        // Send email notification after loading the profile
-        if (email) {
-          fetch("notify.php", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              name: fullName,
-              email: email
-            })
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              console.log("Email sent successfully!");
-            } else {
-              console.error("Error sending email");
-            }
-          })
-          .catch(error => {
-            console.error("Error:", error);
-          });
-        }
-
-      } catch (err) {
-        error.textContent = "Error parsing profile data.";
+      if (links.length === 0) {
+        error.textContent = "No links found.";
         error.classList.remove("hidden");
       }
-    } else {
-      error.textContent = "No profile data found in URL.";
+
+      links.forEach(({ platform, link }) => {
+        const icon = icons[platform.toLowerCase()] || "fas fa-link";
+        const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
+
+        const item = document.createElement("a");
+        item.href = link;
+        item.target = "_blank";
+        item.rel = "noopener noreferrer";
+        item.className = "flex items-center gap-4 bg-white shadow hover:shadow-md transition p-4 rounded-lg border hover:border-blue-500";
+
+        item.innerHTML = `
+          <i class="${icon} text-2xl text-blue-600 w-8 text-center"></i>
+          <div>
+            <p class="text-sm font-semibold text-gray-700">${platformName}</p>
+            <p class="text-xs text-gray-500 break-all">${link}</p>
+          </div>
+        `;
+
+        container.appendChild(item);
+      });
+
+      // Send email notification once
+      if (email) {
+        fetch("notify.php", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ name: fullName, email: email })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            console.log("Email sent successfully!");
+          } else {
+            console.error("Error sending email");
+          }
+        })
+        .catch(error => {
+          console.error("Error:", error);
+        });
+      }
+
+    } catch (err) {
+      error.textContent = "Error parsing profile data.";
       error.classList.remove("hidden");
     }
-  </script>
+  } else {
+    error.textContent = "No profile data found in URL.";
+    error.classList.remove("hidden");
+  }
+</script>
+
 
 </body>
 </html>
