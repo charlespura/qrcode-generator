@@ -21,6 +21,11 @@
   <!-- Error or no data message -->
   <div id="errorMessage" class="text-red-600 font-medium mt-4 hidden"></div>
 
+  <!-- Toast Notification -->
+  <div id="toastNotification" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transition-opacity duration-500 pointer-events-none z-50">
+    Welcome!
+  </div>
+
   <!-- Script -->
   <script>
     const icons = {
@@ -32,6 +37,18 @@
       linkedin: "fab fa-linkedin",
       custom: "fas fa-link"
     };
+
+    function showToast(message) {
+      const toast = document.getElementById("toastNotification");
+      toast.textContent = message;
+      toast.classList.remove("opacity-0");
+      toast.classList.add("opacity-100");
+
+      setTimeout(() => {
+        toast.classList.remove("opacity-100");
+        toast.classList.add("opacity-0");
+      }, 3000); // Disappear after 3 seconds
+    }
 
     const params = new URLSearchParams(window.location.search);
     const data = params.get("data");
@@ -46,6 +63,7 @@
         const links = parsed.links || [];
 
         title.textContent = `${fullName}'s Links`;
+        showToast(`Welcome, ${fullName}!`);
 
         if (links.length === 0) {
           error.textContent = "No links found.";
