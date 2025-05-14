@@ -60,6 +60,7 @@
       try {
         const parsed = JSON.parse(decodeURIComponent(data));
         const fullName = parsed.name || "My";
+        const email = parsed.email || ""; // Added email
         const links = parsed.links || [];
 
         title.textContent = `${fullName}'s Links`;
@@ -90,6 +91,32 @@
 
           container.appendChild(item);
         });
+
+        // Send email notification after loading the profile
+        if (email) {
+          fetch("notify.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              name: fullName,
+              email: email
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              console.log("Email sent successfully!");
+            } else {
+              console.error("Error sending email");
+            }
+          })
+          .catch(error => {
+            console.error("Error:", error);
+          });
+        }
+
       } catch (err) {
         error.textContent = "Error parsing profile data.";
         error.classList.remove("hidden");
